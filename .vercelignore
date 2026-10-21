@@ -1,0 +1,7 @@
+# Exclude Python app and ML pipelines from Vercel's Serverless Function detector
+app.py
+requirements.txt
+packages.txt
+pull_ups/
+.streamlit/
+.venv/
