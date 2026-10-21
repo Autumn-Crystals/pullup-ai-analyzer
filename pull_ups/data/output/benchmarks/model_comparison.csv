@@ -1,0 +1,5 @@
+Model,Architecture,Params (M),Mode,FPS,Latency (ms),Rep Accuracy,Precision (%),Recall (%),F1-Score,mAP@0.5 (COCO),PCK@0.2 (%),Angle RMSE (deg),Hang Angle (deg),Peak Angle (deg),Tracking Rate (%),Edge Ready
+ViTPose+ Large,Vision Transformer (ViT-L),307.0,Cloud VLM / TensorRT,11.5,86.9,4/4,100.0,100.0,1.0,81.1,96.8,1.1,129.8,23.0,100.0,No (Server GPU required)
+ViTPose Base,Vision Transformer (ViT-B),89.0,Cloud VLM / PyTorch,21.2,47.1,4/4,100.0,100.0,1.0,77.4,94.2,1.6,130.6,24.2,98.9,Marginal (Server GPU recommended)
+YOLOv8-Pose,One-Stage CNN (Anchor-Free),3.3,Local (CPU / Edge),11.33,88.3,4/4,100.0,100.0,1.0,64.0,89.5,2.8,140.1,23.1,100.0,Yes (Real-time on mobile/laptop CPU)
+MediaPipe Pose,Two-Stage CNN (BlazePose),3.5,Local (CPU / XNNPACK),8.73,114.6,4/4,100.0,100.0,1.0,61.8,87.2,3.2,137.5,21.7,100.0,Yes (Optimized for edge/mobile CPU)

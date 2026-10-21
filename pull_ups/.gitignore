@@ -15,3 +15,7 @@ data/*
 !data/input/
 data/input/*
 !data/input/.gitkeep
+!data/output/
+data/output/*
+!data/output/benchmarks/
+!data/splits/

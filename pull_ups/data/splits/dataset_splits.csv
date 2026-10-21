@@ -1,0 +1,4 @@
+Filename,Split,Duration (s),Frames,Resolution,HDR
+15859716-uhd_3840_2160_30fps.mp4,Train,9.43,283,3840x2160,False
+15859716-uhd_3840_2160_30fps.mp4,Validation,9.43,283,3840x2160,False
+15859716-uhd_3840_2160_30fps.mp4,Test,9.43,283,3840x2160,False

@@ -38,14 +38,18 @@ class VideoInfo:
 HDR_TRANSFERS = frozenset({"arib-std-b67", "smpte2084"})
 
 
+import shutil
+
+
 @functools.lru_cache(maxsize=None)
 def tool(name: str) -> str:
-    """Resolve *name* next to the running interpreter, falling back to PATH.
-
-    PATH often finds Homebrew's ffmpeg, which lacks `libplacebo` for tone-mapping.
-    """
-    local = Path(sys.executable).parent / name
-    return str(local) if local.is_file() else name
+    """Resolve *name* next to the running interpreter, falling back to PATH."""
+    parent = Path(sys.executable).parent
+    for candidate in [parent / name, parent / f"{name}.exe"]:
+        if candidate.is_file():
+            return str(candidate)
+    found = shutil.which(name)
+    return found if found else name
 
 
 @functools.lru_cache(maxsize=None)

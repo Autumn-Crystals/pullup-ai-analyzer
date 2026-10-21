@@ -28,6 +28,12 @@ import config as cfg
 from src import calibrate, pose, render, reps, video
 from src.env import load_api_key
 
+if sys.platform == "win32":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
+
 console = Console()
 
 
@@ -82,10 +88,48 @@ def inference_tonemap(src_info: dict) -> tuple[str | None, str | None, str]:
 
 
 def pose_clip(api_key: str, mp4: Path, info: video.VideoInfo) -> dict:
-    """ViTPose on every frame of *mp4*, from the cache when it matches.
+    """Pose estimation on every frame of *mp4*, supporting ViTPose, YOLOv8, or MediaPipe."""
+    m_name = str(cfg.POSE_MODEL).lower()
 
-    Shared with calibrate.py, so reference and graded clips use the same request.
-    """
+    if "yolo" in m_name:
+        from src.local_pose import run_yolov8_pose
+        console.print("  [cyan]running local YOLOv8-pose on CPU...[/]")
+        t0 = time.perf_counter()
+        payload = run_yolov8_pose(mp4)
+        seconds = time.perf_counter() - t0
+        console.print(f"  [green]done in {seconds:.1f}s[/] ({payload['meta']['inference_fps']} fps)")
+        frames, _ = pose.unwrap(payload)
+        dropped = pose.dedupe(frames, max_persons=cfg.MAX_PERSONS, iou=cfg.PERSON_IOU_THRESHOLD)
+        return {
+            "frames": frames,
+            "by_index": {f["index"]: f["persons"] for f in frames},
+            "extra_body": {"method": "pose", "model": "yolov8-pose"},
+            "dropped": dropped,
+            "seconds": seconds,
+            "cost": 0.0,
+        }
+
+    if "mediapipe" in m_name or "blaze" in m_name:
+        from src.local_pose import run_mediapipe_pose
+        console.print("  [cyan]running local MediaPipe BlazePose on CPU...[/]")
+        t0 = time.perf_counter()
+        asset_path = Path(__file__).resolve().parent / "pose_landmarker_heavy.task"
+        if not asset_path.exists():
+            asset_path = Path("pose_landmarker_heavy.task")
+        payload = run_mediapipe_pose(mp4, str(asset_path))
+        seconds = time.perf_counter() - t0
+        console.print(f"  [green]done in {seconds:.1f}s[/] ({payload['meta']['inference_fps']} fps)")
+        frames, _ = pose.unwrap(payload)
+        dropped = pose.dedupe(frames, max_persons=cfg.MAX_PERSONS, iou=cfg.PERSON_IOU_THRESHOLD)
+        return {
+            "frames": frames,
+            "by_index": {f["index"]: f["persons"] for f in frames},
+            "extra_body": {"method": "pose", "model": "mediapipe-pose"},
+            "dropped": dropped,
+            "seconds": seconds,
+            "cost": 0.0,
+        }
+
     video_b64, extra_body = pose.build_request(
         mp4, every_frame=cfg.EVERY_FRAME, fps=info.fps, n_frames=info.n_frames,
         video_fps=cfg.VIDEO_FPS, video_max_frames=cfg.VIDEO_MAX_FRAMES, precision=cfg.PRECISION)
@@ -101,7 +145,7 @@ def pose_clip(api_key: str, mp4: Path, info: video.VideoInfo) -> dict:
         client = OpenAI(base_url=cfg.GATEWAY_BASE_URL, api_key=api_key,
                         timeout=cfg.REQUEST_TIMEOUT, max_retries=1)
         t0 = time.perf_counter()
-        with console.status("[cyan]waiting on the gateway[/]; ViTPose on every frame…",
+        with console.status(f"[cyan]waiting on gateway[/]; {cfg.POSE_MODEL}…",
                             spinner="dots"):
             payload, usage = pose.request_poses(client, model=cfg.POSE_MODEL,
                                                 video_b64=video_b64, extra_body=extra_body)
@@ -345,6 +389,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help=f"the span the PULL time measures (config: {cfg.REP_METRIC})")
     parser.add_argument("--fresh", action="store_true",
                         help="ignore the cached poses and call the model again")
+    parser.add_argument("--model", type=str,
+                        help="pose model to use (vitpose-large, vitpose-base, yolov8, mediapipe)")
     credit = parser.add_argument_group(
         "credit", "the lines in the panel's corner; any of these replaces config.py's CREDIT")
     credit.add_argument("--li", metavar="TEXT", help='LinkedIn, e.g. "Jeremy Park, PhD"')
@@ -356,6 +402,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def apply_args(args: argparse.Namespace) -> None:
     """Write the flags over the config, before anything reads it."""
+    if args.model:
+        m = args.model.lower()
+        if m in ("vitpose-large", "vitpose", "vitpose+"):
+            cfg.POSE_MODEL = "usyd-community/vitpose-plus-large"
+        elif m in ("vitpose-base", "base"):
+            cfg.POSE_MODEL = "usyd-community/vitpose-base"
+        elif "yolo" in m:
+            cfg.POSE_MODEL = "yolov8"
+        elif "mediapipe" in m or "blaze" in m:
+            cfg.POSE_MODEL = "mediapipe"
+        else:
+            cfg.POSE_MODEL = args.model
     if args.uncalibrated:
         cfg.USE_CALIBRATION = False
     if args.height:

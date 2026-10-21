@@ -1,0 +1,25 @@
+{
+  "total_clips": 1,
+  "total_frames": 283,
+  "total_duration_seconds": 9.43,
+  "total_duration_minutes": 0.16,
+  "video_catalog": [
+    {
+      "id": "clip_001",
+      "filename": "15859716-uhd_3840_2160_30fps.mp4",
+      "filepath": "D:\\ML Project\\pull_ups\\data\\input\\15859716-uhd_3840_2160_30fps.mp4",
+      "size_mb": 23.07,
+      "width": 3840,
+      "height": 2160,
+      "fps": 30.0,
+      "n_frames": 283,
+      "duration_s": 9.43,
+      "codec": "h264",
+      "pix_fmt": "yuv420p",
+      "color_transfer": "bt709",
+      "is_hdr": false,
+      "rotation_deg": 0,
+      "cleaning_status": "Verified (Valid streams & headers)"
+    }
+  ]
+}

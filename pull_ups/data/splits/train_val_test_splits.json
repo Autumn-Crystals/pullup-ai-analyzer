@@ -1,0 +1,16 @@
+{
+  "split_ratios": "70% Train / 15% Val / 15% Test",
+  "random_seed": 42,
+  "train": [
+    "15859716-uhd_3840_2160_30fps.mp4"
+  ],
+  "validation": [
+    "15859716-uhd_3840_2160_30fps.mp4"
+  ],
+  "test": [
+    "15859716-uhd_3840_2160_30fps.mp4"
+  ],
+  "train_count": 1,
+  "validation_count": 1,
+  "test_count": 1
+}
