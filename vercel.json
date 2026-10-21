@@ -2,6 +2,9 @@
   "version": 2,
   "name": "pullup-ai-kinematics",
   "cleanUrls": true,
-  "trailingSlash": false,
-  "outputDirectory": "public"
+  "rewrites": [
+    { "source": "/api", "destination": "/api/index.py" },
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
